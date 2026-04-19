@@ -1,37 +1,19 @@
-/**
- * Lapisan API untuk backend Laravel 12.
- *
- * Saat siap, set VITE_API_BASE_URL di environment dan ganti `MOCK` ke `false`.
- * Endpoint yang diharapkan (sesuaikan resource controller Laravel Anda):
- *
- *   GET    /api/cars
- *   GET    /api/cars/:id
- *   POST   /api/cars                       (admin)
- *   PUT    /api/cars/:id                   (admin)
- *   DELETE /api/cars/:id                   (admin)
- *
- *   GET    /api/bookings                   (current user; admin: all)
- *   POST   /api/bookings                   { car_id, start_at, end_at }
- *   POST   /api/bookings/:id/return        { returned_at }
- *   GET    /api/bookings/:id
- *
- *   POST   /api/payments                   multipart: booking_id, method, amount, proof
- *   POST   /api/payments/:id/approve       (admin)
- *   POST   /api/payments/:id/reject        (admin)
- *
- *   GET    /api/fines                      (admin)
- *   GET    /api/reports/transactions       (admin) → JSON, di-export Excel di client
- */
+
 import type { Booking, Car, Payment } from "@/types";
 import { mockCars, mockBookings } from "./mock-data";
 
 const MOCK = !import.meta.env.VITE_API_BASE_URL;
 const BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
+// src/lib/api.ts - ganti function request
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = localStorage.getItem("rental_token");
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json", Accept: "application/json", ...(init?.headers ?? {}) },
-    credentials: "include",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...init,
   });
   if (!res.ok) throw new Error((await res.text()) || res.statusText);
@@ -132,12 +114,21 @@ export const paymentsApi = {
       _bookings = _bookings.map((b) => (b.id === input.booking_id ? { ...b, payment } : b));
       return delay(payment);
     }
+ const token = localStorage.getItem("rental_token");
     const fd = new FormData();
     fd.append("booking_id", input.booking_id);
     fd.append("method", input.method);
     fd.append("amount", String(input.amount));
     if (input.proof) fd.append("proof", input.proof);
-    const res = await fetch(`${BASE}/api/payments`, { method: "POST", body: fd, credentials: "include" });
+    const res = await fetch(`${BASE}/api/payments`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+        // JANGAN tambahkan Content-Type, biarkan browser set otomatis untuk FormData
+      },
+      body: fd,
+    });
     if (!res.ok) throw new Error(await res.text());
     return res.json() as Promise<Payment>;
   },

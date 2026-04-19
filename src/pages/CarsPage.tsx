@@ -18,14 +18,28 @@ export default function CarsPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [readyOnly, setReadyOnly] = useState(false);
 
-  const filtered = useMemo(() => {
-    return (cars ?? []).filter((c) => {
-      if (filter !== "all" && c.engine !== filter) return false;
-      if (readyOnly && c.status !== "ready") return false;
-      if (q && !`${c.brand} ${c.model} ${c.plate}`.toLowerCase().includes(q.toLowerCase())) return false;
-      return true;
-    });
-  }, [cars, q, filter, readyOnly]);
+const filtered = useMemo(() => {
+  return (cars ?? []).filter((c) => {
+    // 1. Filter Tipe Mesin (Logic Fix)
+    if (filter !== "all") {
+      // Kita samakan dulu 'electric' dari Laravel agar terbaca sebagai 'ev' di React
+      const carType = c.type === 'electric' ? 'ev' : c.type;
+      if (carType !== filter) return false;
+    }
+
+    // 2. Filter Hanya yang Ready
+    if (readyOnly && c.status !== "ready") return false;
+
+    // 3. Filter Pencarian (Search)
+    // Karena Laravel pakai 'name', kita ganti c.brand & c.model menjadi c.name
+    if (q) {
+      const searchStr = `${c.name} ${c.plate}`.toLowerCase();
+      if (!searchStr.includes(q.toLowerCase())) return false;
+    }
+
+    return true;
+  });
+}, [cars, q, filter, readyOnly]);
 
   return (
     <>

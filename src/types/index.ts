@@ -1,4 +1,4 @@
-export type EngineType = "manual" | "ev" | "hybrid";
+export type EngineType = "manual" | "ev" | "hybrid" | "electric";
 export type CarStatus = "ready" | "rented" | "maintenance";
 export type Role = "admin" | "user";
 export type PaymentMethod = "transfer" | "qris";
@@ -6,27 +6,29 @@ export type PaymentStatus = "pending" | "approved" | "rejected";
 export type BookingStatus = "awaiting_payment" | "active" | "returned" | "overdue" | "cancelled";
 
 export interface Car {
-  id: string;
-  brand: string;
-  model: string;
-  year: number;
-  plate: string;
-  engine: EngineType;
-  seats: number;
-  transmission: string;
+  id: number | string; // Biar aman untuk Laravel (number) & Mock (string)
+  name: string;        // Wajib (Laravel)
+  type: string;        // Wajib (Laravel)
   daily_price: number;
-  fine_pct_per_hour: number; // % of daily price per overdue hour
-  status: CarStatus;
-  image_url: string;
+  status: "ready" | "rented" | "maintenance";
+  
+  // Properti pendukung (opsional agar tidak error)
+  brand?: string;
+  model?: string;
+  year?: number;
+  plate?: string;
+  engine?: EngineType | string; 
+  seats?: number;
+  transmission?: string;
+  image_url?: string;
   description?: string;
+  fine_pct_per_hour?: number;
 }
-
 export interface User {
-  id: string;
+  id: string | number;
   name: string;
   email: string;
-  phone?: string;
-  role: Role;
+  role: "user" | "admin";
 }
 
 export interface Payment {

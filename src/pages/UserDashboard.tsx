@@ -23,11 +23,11 @@ export default function UserDashboard() {
 
   const { data: bookings, isLoading } = useQuery({
     queryKey: ["bookings", user.id],
-    queryFn: () => bookingsApi.list(user.id),
+    queryFn: () => bookingsApi.list(String(user.id)),
   });
 
   const active = bookings?.find((b) => b.status === "active");
-  const target = payId && bookings?.find((b) => b.id === payId);
+  const target = payId && bookings?.find((b) => String(b.id) === payId);
 
   return (
     <div className="container space-y-8 py-8">

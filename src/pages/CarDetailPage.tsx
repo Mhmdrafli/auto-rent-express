@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { formatIDR } from "@/lib/format";
 import { toast } from "sonner";
+import { EngineType } from "@/types";
 
 export default function CarDetailPage() {
   const { id = "" } = useParams();
@@ -33,7 +34,7 @@ export default function CarDetailPage() {
   const book = useMutation({
     mutationFn: () => bookingsApi.create({
       car_id: id,
-      user_id: user.id,
+      user_id: String(user.id),
       start_at: new Date(`${start}T10:00:00`).toISOString(),
       end_at: new Date(`${end}T10:00:00`).toISOString(),
     }),
@@ -64,7 +65,7 @@ export default function CarDetailPage() {
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status={car.status} />
-              <EngineBadge engine={car.engine} />
+              <EngineBadge engine={(car.type === 'electric' ? 'ev' : car.type) as EngineType} />
             </div>
             <h1 className="text-3xl font-bold">{car.brand} {car.model} <span className="font-normal text-muted-foreground">{car.year}</span></h1>
             <p className="text-muted-foreground">{car.description}</p>

@@ -1,18 +1,24 @@
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { Car as CarIcon, LayoutDashboard, ShieldCheck, UserCircle2 } from "lucide-react";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Car as CarIcon, LayoutDashboard, ShieldCheck, LogOut, UserCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function AppLayout() {
-  const { user, setRole } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     { to: "/", label: "Mobil", icon: CarIcon },
-    { to: "/dashboard", label: "Dashboard Saya", icon: LayoutDashboard, hide: user.role === "admin" },
-    { to: "/admin", label: "Admin", icon: ShieldCheck, hide: user.role !== "admin" },
+    { to: "/dashboard", label: "Dashboard Saya", icon: LayoutDashboard, hide: !user || user.role === "admin" },
+    { to: "/admin", label: "Admin", icon: ShieldCheck, hide: !user || user.role !== "admin" },
   ].filter((i) => !i.hide);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,15 +49,22 @@ export default function AppLayout() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant={user.role === "admin" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setRole(user.role === "admin" ? "user" : "admin")}
-              title="Toggle role (demo)"
-            >
-              <UserCircle2 className="mr-1.5 h-4 w-4" />
-              {user.role === "admin" ? "Admin" : "User"}
-            </Button>
+            {user ? (
+              <>
+                <span className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <UserCircle2 className="h-4 w-4" />
+                  {user.name}
+                </span>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  <LogOut className="mr-1.5 h-4 w-4" />
+                  <span className="hidden sm:inline">Keluar</span>
+                </Button>
+              </>
+            ) : (
+              <Button size="sm" onClick={() => navigate("/login")}>
+                Masuk
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -61,7 +74,7 @@ export default function AppLayout() {
       </main>
 
       <footer className="mt-16 border-t py-6 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} DriveLine Rental · Frontend siap dihubungkan ke Laravel 12 API
+        © {new Date().getFullYear()} DriveLine Rental · Reserved all 2026
       </footer>
     </div>
   );
